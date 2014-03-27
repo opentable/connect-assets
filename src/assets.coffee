@@ -31,6 +31,7 @@ module.exports = exports = (options = {}) ->
   options.detectChanges ?= process.env.NODE_ENV isnt 'production'
   options.minifyBuilds ?= true
   options.pathsOnly ?= false
+  options.writeFileSync ?= false
   libs.stylusExtends = options.stylusExtends ?= () => {};
 
   jsCompilers = extend jsCompilers, options.jsCompilers || {}
@@ -153,8 +154,8 @@ class ConnectAssets
         @cache.set filename, img, cacheFlags
         if @options.buildDir
           buildPath = path.join process.cwd(), @options.buildDir, filename
-          mkdirRecursive path.dirname(buildPath), 0o0755, ->
-            fs.writeFile buildPath, img
+          mkdirRecursive path.dirname(buildPath), 0o0755, =>
+            @writeFile buildPath, img
         return @cachedRoutePaths[route] = "/#{filename}"
       else
         @cache.set route, img, {mtime}
@@ -237,8 +238,8 @@ class ConnectAssets
           @cache.set filename, css, cacheFlags
           if @options.buildDir
             buildPath = path.join process.cwd(), @options.buildDir, filename
-            mkdirRecursive path.dirname(buildPath), 0o0755, ->
-              fs.writeFile buildPath, css
+            mkdirRecursive path.dirname(buildPath), 0o0755, =>
+              @writeFile buildPath, css
           return @cachedRoutePaths[route] = "/#{filename}"
         else
           @cache.set route, css, {mtime}
@@ -266,8 +267,8 @@ class ConnectAssets
               @cache.set filename, concatenation, cacheFlags
               if buildDir = @options.buildDir
                 buildPath = path.join process.cwd(), buildDir, filename
-                mkdirRecursive path.dirname(buildPath), 0o0755, (err) ->
-                  fs.writeFile buildPath, concatenation
+                mkdirRecursive path.dirname(buildPath), 0o0755, (err) =>
+                  @writeFile buildPath, concatenation
             else
               filename = @buildFilenames[sourcePath]
           snocketsFlags = minify: @options.minifyBuilds, async: false
@@ -289,6 +290,11 @@ class ConnectAssets
     else
       path.join process.cwd(), @options.src, route
 
+  writeFile: (filename, data) ->
+    if @options.writeFileSync
+      fs.writeFileSync(filename, data)
+    else
+      fs.writeFile(filename, data)
 # ## Asset compilers
 exports.cssCompilers = cssCompilers =
 
