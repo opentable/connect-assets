@@ -82,8 +82,11 @@ class ConnectAssets
     context.css = (route, routeOptions={}) =>
       attrs = []
       route = expandRoute route, '.css', context.css.root
+      resCSS = @compileCSS route
+      if typeof resCSS == 'undefined' 
+        return;
       unless route.match REMOTE_PATH
-        route = @options.servePath + @compileCSS route
+        route = @options.servePath + resCSS
 
       if @options.pathsOnly
         return route
@@ -220,6 +223,8 @@ class ConnectAssets
             source = data.toString 'utf8'
           startTime = new Date
           css = cssCompilers[ext].compileSync @absPath(sourcePath), source, @options.helperContext
+          if typeof css == 'undefined'
+            return
           if css is @compiledCss[sourcePath]?.data.toString 'utf8'
             alreadyCached = true
           else
